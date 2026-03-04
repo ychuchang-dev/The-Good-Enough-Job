@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《夠好的工作》職場靈魂測驗</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #f39c12; --bg: #f8f9fa; --card: #ffffff; --text: #444; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px 0; }
+        .quiz-container { background: var(--card); max-width: 550px; width: 92%; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); overflow: hidden; }
+        .image-wrapper { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; background: #f0f0f0; }
+        .intro-image { width: 100%; height: auto; display: block; object-fit: contain; }
+        .q-image { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+        .result-image { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.6rem; text-align: center; color: var(--primary); margin: 15px 0 10px; }
+        .description { text-align: center; color: #777; font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; }
+        .progress { text-align: center; color: #bbb; font-size: 0.85rem; margin-bottom: 10px; }
+        .question-text { font-size: 1.2rem; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 20px; min-height: 3.5em; display: flex; align-items: center; justify-content: center; padding: 0 10px; }
+        .option { display: block; width: 100%; padding: 16px; margin: 10px 0; border: 1px solid #eee; border-radius: 12px; background: #fff; cursor: pointer; transition: 0.2s ease; text-align: left; font-size: 1rem; color: #555; }
+        .option:hover { background: #fffaf0; border-color: #fceecb; }
+        .option.selected { border-color: var(--accent); background: #fff9ed; color: var(--accent); font-weight: bold; }
+        .controls { text-align: center; margin-top: 25px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 14px 60px; border-radius: 30px; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2); display: inline-block; }
+        .next-btn { opacity: 0.3; pointer-events: none; }
+        .next-btn.active { opacity: 1; pointer-events: auto; }
+        
+        /* 資料 BOX 樣式 */
+        .person-box { background: #fdfaf3; border: 1px solid #fceecb; border-radius: 12px; margin-top: 20px; padding: 20px; text-align: left; font-size: 0.9rem; }
+        .person-header { font-weight: bold; color: var(--accent); font-size: 1.1rem; border-bottom: 2px solid #fceecb; padding-bottom: 8px; margin-bottom: 15px; display: block; }
+        .info-row { margin-bottom: 10px; line-height: 1.6; }
+        .info-label { font-weight: bold; color: var(--primary); display: inline-block; width: 120px; flex-shrink: 0; }
+        .info-content { color: #555; display: flex; align-items: flex-start; margin-bottom: 8px; }
+        
+        #quiz-box, #result { display: none; }
+        .restart-btn { background: #f0f0f0; color: #888; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer; margin-top: 25px; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="intro-box">
+        <div class="image-wrapper"><img src="Intro.png" alt="Intro" class="intro-image"></div>
+        <h1>《夠好的工作》讀書會測驗</h1>
+        <p class="description">你的工作定義了你嗎？<br>花 3 分鐘，在故事中看見自己。</p>
+        <div class="controls"><button class="btn" onclick="startQuiz()">開始測驗</button></div>
+    </div>
+
+    <div id="quiz-box">
+        <div class="progress" id="progress">第 1 / 10 題</div>
+        <div class="image-wrapper"><img id="q-image" src="" alt="Question Image" class="q-image"></div>
+        <div class="question-text" id="q-text">載入中...</div>
+        <div id="options-container"></div>
+        <div class="controls"><button id="next-btn" class="btn next-btn" onclick="goToNext()">確認，下一題</button></div>
+    </div>
+
+    <div id="result">
+        <h2 style="color:var(--primary); text-align:center;">你的職場靈魂原型</h2>
+        <img id="res-image" src="" alt="Result Image" class="result-image">
+        <div id="res-name" style="text-align:center; font-size:1.4rem; font-weight:bold; color:var(--accent); margin-bottom:20px;"></div>
+        <div id="res-detail-container"></div>
+        <div style="text-align:center;"><button class="restart-btn" onclick="location.reload()">重新測驗</button></div>
+    </div>
+</div>
+
+<script>
+    // 題目數據 (保持不變)
+    const questions = [
+        { q: "當你在聚會中自我介紹時，你通常會：", img: "Q1.png", options: [{t:"優先說出職稱與公司", s:"A"}, {t:"分享興趣與生活", s:"B"}, {t:"強調高價值專案", s:"C"}, {t:"想聊別的話題", s:"D"}]},
+        { q: "週日晚上的你，通常心情如何？", img: "Q2.png", options: [{t:"規劃週一清單", s:"A"}, {t:"享受自由，明天再說", s:"B"}, {t:"感到焦慮事沒做完", s:"C"}, {t:"無奈但接受領薪水", s:"D"}]},
+        { q: "如何定義「成功的人生」？", img: "Q3.png", options: [{t:"職業達到頂峰", s:"A"}, {t:"豐富的私人生活", s:"B"}, {t:"不斷突破自我極限", s:"C"}, {t:"經濟獨立有時間", s:"D"}]},
+        { q: "對於「熱情」，你的看法是：", img: "Q4.png", options: [{t:"工作一定要結合熱情", s:"A"}, {t:"熱情在工作之外找", s:"B"}, {t:"怕自己不夠熱情", s:"C"}, {t:"公司要求共體時艱的話術", s:"D"}]},
+        { q: "休長假時，你的手機通知通常：", img: "Q5.png", options: [{t:"忍不住每幾小時檢查", s:"A"}, {t:"完全關閉，甚至沒帶公務機", s:"B"}, {t:"看到未讀會心神不寧", s:"C"}, {t:"只回急事，其他開工再說", s:"D"}]},
+        { q: "工作失誤被指正時，你：", img: "Q6.png", options: [{t:"感覺整個人都很失敗", s:"A"}, {t:"只是工作建議，修正就好", s:"B"}, {t:"反思能力不足並懷疑自我", s:"C"}, {t:"表面配合，反正領錢辦事", s:"D"}]},
+        { q: "你理想的下班狀態是：", img: "Q7.png", options: [{t:"進修技能，保持競爭力", s:"A"}, {t:"完全切換到另一個興趣身分", s:"B"}, {t:"回完最後幾封信才安心", s:"C"}, {t:"徹底關機躺平", s:"D"}]},
+        { q: "如果明天中了樂透，你會：", img: "Q8.png", options: [{t:"換個更有權力的位子做", s:"A"}, {t:"立刻辭職環遊世界", s:"B"}, {t:"擔心沒工作會變廢人", s:"C"}, {t:"換輕鬆時數短的兼職", s:"D"}]},
+        { q: "對於「斜槓」，你的動機通常是：", img: "Q9.png", options: [{t:"把才華轉化為職業成功", s:"A"}, {t:"探索不賺錢的純粹快樂", s:"B"}, {t:"擔心主業不穩要保障", s:"C"}, {t:"增加收入，早日財富自由", s:"D"}]},
+        { q: "你認同「我的工作定義了我」嗎？", img: "Q10.png", options: [{t:"非常認同，沒工作沒自我", s:"A"}, {t:"完全不認同，只是部分", s:"B"}, {t:"部分認同但壓力很大", s:"C"}, {t:"那只是夢想家的話", s:"D"}]}
+    ];
+
+    // 書中人物資料庫
+    const personDatabase = [
+        {
+            type: "A",
+            name: "狄維亞．辛格 (Divya Singh)",
+            background: "餐飲業，研發廚師、公司創辦人",
+            myth: "我們的所為，決定我們是誰 (工作等於價值)",
+            event: "與商業夥伴發生股權糾紛，發現持股被清零後提起仲裁。",
+            redefine: "體認到個人價值不取決於產出，在工作之外創造價值來保護自己。",
+            advice: "投資不同面向的自己，發展「自我複雜度」以緩衝壓力。"
+        },
+        {
+            type: "A",
+            name: "萊恩．伯吉 (Ryan Burge)",
+            background: "政治學教授、浸信會牧師",
+            myth: "把工作當成神 (工作主義)",
+            event: "面對教會衰落與社群媒體成名的衝擊，重新審視身分。",
+            redefine: "從生活中多樣化尋求意義，使單一挫折不帶來致命打擊。",
+            advice: "建立多樣化的身分容器（如父親、牧師、學者），主動決定價值。"
+        },
+        {
+            type: "A",
+            name: "梅根．葛林威爾 (Megan Greenwell)",
+            background: "新聞媒體業，前《連線》雜誌網站主編",
+            myth: "工作等於價值 (身分糾結)",
+            event: "達到職業巔峰也無法消除倦怠感，決定辭職休假。",
+            redefine: "嘗試剝離「生產者」標籤，練習在沒有工作時建立自我感。",
+            advice: "練習「玩樂」，為非工作時間留出「時間聖殿」。"
+        },
+        {
+            type: "B",
+            name: "凱希 (Khe Hy)",
+            background: "金融業，前貝萊德董事總經理",
+            myth: "地位等於成功 (履歷美德)",
+            event: "三十三歲因壓力大到掉髮，發現財富地位未帶來快樂。",
+            redefine: "成功是明白「夠好」的真諦，依個人價值定義滿意度。",
+            advice: "建立「價值自決」，擺脫外在獎勵，將生產力視為支持生活的工具。"
+        },
+        {
+            type: "B",
+            name: "西蒙．史托佐夫 (Simone Stolzoff)",
+            background: "本書作者，作家與設計師",
+            myth: "期望工作永遠是成就感來源",
+            event: "在寫書與全職工作間焦慮，體認到自己也陷入生產力陷阱。",
+            redefine: "夠好的工作是讓人能成為想成為的人，而非衡量的標準。",
+            advice: "定義個人的「夠好」，用「你喜歡做什麼」取代「你是做什麼的」。"
+        },
+        {
+            type: "C",
+            name: "喬許．艾柏森 (Josh Epperson)",
+            background: "品牌諮詢業，創意策略顧問",
+            myth: "工作時數越長越好 (忙碌等於成功)",
+            event: "追求高薪多年後被拒絕晉升創意總監，從盲目崇拜中清醒。",
+            redefine: "將時間視為比金錢更珍貴的資產，定義「夠用」換取自由。",
+            advice: "減少時間與金錢責任（如換小房子），實施每週低工時實驗。"
+        },
+        {
+            type: "C",
+            name: "芙巴茲．艾達 (Fobazi Ettarh)",
+            background: "教育與圖書館學，校園圖書館員",
+            myth: "夢想工作與職業敬畏 (Vocational Awe)",
+            event: "疫情期間目睹機構對員工漠視，意識到神聖使命常被用來剝削。",
+            redefine: "不再追求夢想工作，而是選擇以學者身分推動制度改革。",
+            advice: "屏除職業敬畏，將工作視為經濟關係，而非神聖職志。"
+        },
+        {
+            type: "D",
+            name: "布蘭登．史普雷格 (Brandon Sprague)",
+            background: "軟體工程師，Google 員工",
+            myth: "辦公室福利的陷阱 (工作與生活無界限)",
+            event: "住在公司貨車五年規避租金，意識到自己變成無目的工作的殭屍。",
+            redefine: "工作僅是工具而非身分，不讓企業文化內化為個人文化。",
+            advice: "明確區分工作時間與空間，拒絕過度的園區依賴。"
+        },
+        {
+            type: "D",
+            name: "泰勒 與 克拉麗莎",
+            background: "科技平台 Kickstarter 員工",
+            myth: "把公司當家 (家庭式企業文化)",
+            event: "因爭議計畫引發抗議，核心成員遭開除後體會權力結構。",
+            redefine: "真正的賦權來自權力透明化，將友誼轉化為集體力量。",
+            advice: "建立有組織的勞工制衡（工會），用合約取代模糊的「家庭」話術。"
+        }
+    ];
+
+    const resultsMeta = {
+        "A": { name: "工作崇拜者 (The Workist)", img: "Workist.png", desc: "你將工作視為身分認同的核心。這種心態讓你極易受到職場波動的打擊。" },
+        "B": { name: "生活實踐家 (The Balanced)", img: "IntegratedIndividual.png", desc: "你符合書中「夠好」的精神，懂得根據個人價值定義滿意度。" },
+        "C": { name: "焦慮精英 (The Perfectionist)", img: "AnxiousAchiever.png", desc: "你容易陷入對「忙碌」與「神聖使命」的追求，害怕停下會失去價值。" },
+        "D": { name: "務實生存者 (The Pragmatist)", img: "Pragmatist.png", desc: "你將工作視為純粹的工具，並懂得用契約與邊界來保護個人生活。" }
+    };
+
+    let currentIdx = 0;
+    let scores = { A:0, B:0, C:0, D:0 };
+    let tempScore = null;
+
+    function startQuiz() {
+        document.getElementById('intro-box').style.display = 'none';
+        document.getElementById('quiz-box').style.display = 'block';
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('progress').innerText = `第 ${currentIdx + 1} / ${questions.length} 題`;
+        document.getElementById('q-text').innerText = q.q;
+        document.getElementById('q-image').src = q.img;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerText = opt.t;
+            btn.onclick = () => selectOption(btn, opt.s);
+            container.appendChild(btn);
+        });
+        document.getElementById('next-btn').classList.remove('active');
+        tempScore = null;
+        window.scrollTo(0,0);
+    }
+
+    function selectOption(el, score) {
+        document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+        el.classList.add('selected');
+        tempScore = score;
+        document.getElementById('next-btn').classList.add('active');
+    }
+
+    function goToNext() {
+        if (!tempScore) return;
+        scores[tempScore]++;
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            renderQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-box').style.display = 'none';
+        const resultDiv = document.getElementById('result');
+        const winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        const meta = resultsMeta[winner];
+        
+        document.getElementById('res-name').innerText = meta.name;
+        document.getElementById('res-image').src = meta.img;
+        
+        let detailHTML = `<p style="text-align:center; color:#666; margin-bottom:30px;">${meta.desc}</p>`;
+        detailHTML += `<h3 style="color:var(--primary); margin-bottom:15px; border-left:4px solid var(--accent); padding-left:10px;">延伸閱讀：書中案例資料 BOX</h3>`;
+
+        // 從資料庫篩選出該類型的所有人物
+        const matchedPersons = personDatabase.filter(p => p.type === winner);
+        matchedPersons.forEach(p => {
+            detailHTML += `
+                <div class="person-box">
+                    <span class="person-header">👤 人物姓名：${p.name}</span>
+                    <div class="info-content"><span class="info-label">行業背景：</span><span>${p.background}</span></div>
+                    <div class="info-content"><span class="info-label">核心迷思：</span><span>${p.myth}</span></div>
+                    <div class="info-content"><span class="info-label">轉折事件：</span><span>${p.event}</span></div>
+                    <div class="info-content"><span class="info-label">成功重新定義：</span><span>${p.redefine}</span></div>
+                    <div class="info-content"><span class="info-label">平衡之建議：</span><span>${p.advice}</span></div>
+                </div>
+            `;
+        });
+
+        document.getElementById('res-detail-container').innerHTML = detailHTML;
+        resultDiv.style.display = 'block';
+        window.scrollTo(0,0);
+    }
+</script>
+</body>
+</html>
